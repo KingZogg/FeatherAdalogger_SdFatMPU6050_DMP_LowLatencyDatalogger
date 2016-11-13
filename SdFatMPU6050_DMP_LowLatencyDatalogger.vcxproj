@@ -1,0 +1,93 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{C5F80730-F44F-4478-BDAE-6634EFC2CA88}</ProjectGuid>
+    <RootNamespace>$safeprojectname$</RootNamespace>
+    <ProjectName>SdFatMPU6050_DMP_LowLatencyDatalogger</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>
+    </PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>
+    </PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>C:\Users\Zog\AppData\Local\arduino15\packages\adafruit\hardware\samd\1.0.11\libraries\SPI;C:\Users\Zog\Documents\Arduino\libraries\SdFat\src;C:\Users\Zog\AppData\Local\arduino15\packages\adafruit\hardware\samd\1.0.11\libraries\Wire;C:\Users\Zog\Documents\Arduino\libraries\I2Cdev;C:\Users\Zog\Documents\Arduino\libraries\MPU6050;C:\Users\Zog\Documents\Arduino\libraries\SparkFun_BME280\src;C:\Users\Zog\Documents\Arduino\libraries\HMC5883L;C:\Users\Zog\Documents\Arduino\libraries\RTClib;C:\Users\Zog\Dropbox\AA Arduino Sketchbook\libraries\HMC5883L;C:\Users\Zog\Dropbox\AA Arduino Sketchbook\libraries\HMC5883L\utility;C:\Users\Zog\Dropbox\AA Arduino Sketchbook\libraries\I2Cdev;C:\Users\Zog\Dropbox\AA Arduino Sketchbook\libraries\I2Cdev\utility;C:\Users\Zog\Dropbox\AA Arduino Sketchbook\libraries\MPU6050;C:\Users\Zog\Dropbox\AA Arduino Sketchbook\libraries\MPU6050\utility;C:\Users\Zog\Dropbox\AA Arduino Sketchbook\libraries\RTClib;C:\Users\Zog\Dropbox\AA Arduino Sketchbook\libraries\RTClib\utility;C:\Users\Zog\Dropbox\AA Arduino Sketchbook\libraries\SdFat\src;C:\Users\Zog\Dropbox\AA Arduino Sketchbook\libraries\SdFat\src\utility;C:\Users\Zog\Dropbox\AA Arduino Sketchbook\libraries\SparkFun_BME280\src;C:\Users\Zog\Dropbox\AA Arduino Sketchbook\libraries\SparkFun_BME280\src\utility;C:\Users\Zog\AppData\Local\arduino15\packages\adafruit\hardware\samd\1.0.11\libraries\SPI\utility;C:\Users\Zog\AppData\Local\arduino15\packages\adafruit\hardware\samd\1.0.11\libraries\Wire\utility;c:\users\Zog\Dropbox\AA Arduino\arduino-1.6.9\libraries;C:\Users\Zog\AppData\Local\arduino15\packages\adafruit\hardware\samd\1.0.11\libraries;C:\Users\Zog\Dropbox\AA Arduino Sketchbook\libraries;C:\Users\Zog\AppData\Local\arduino15\packages\adafruit\hardware\samd\1.0.11\cores\arduino;C:\Users\Zog\AppData\Local\arduino15\packages\adafruit\hardware\samd\1.0.11\cores\arduino\avr;C:\Users\Zog\AppData\Local\arduino15\packages\adafruit\hardware\samd\1.0.11\cores\arduino\USB;C:\Users\Zog\AppData\Local\arduino15\packages\adafruit\hardware\samd\1.0.11\variants\arduino_zero;C:\Users\Zog\Dropbox\AA Arduino Sketchbook\SdFatMPU6050_DMP_LowLatencyDatalogger;C:\Users\Zog\AppData\Local\arduino15\packages\arduino\tools\CMSIS\4.0.0-atmel/CMSIS/Include/;C:\Users\Zog\AppData\Local\arduino15\packages\arduino\tools\CMSIS\4.0.0-atmel/Device/ATMEL/;C:\Users\Zog\AppData\Local\arduino15\packages\arduino\tools\arm-none-eabi-gcc\4.8.3-2014q1\arm-none-eabi\include\c++\4.8.3;C:\Users\Zog\AppData\Local\arduino15\packages\arduino\tools\arm-none-eabi-gcc\4.8.3-2014q1\arm-none-eabi\include\c++\4.8.3\arm-none-eabi;C:\Users\Zog\AppData\Local\arduino15\packages\arduino\tools\arm-none-eabi-gcc\4.8.3-2014q1\arm-none-eabi\include\c++\4.8.3\bits;C:\Users\Zog\AppData\Local\arduino15\packages\arduino\tools\arm-none-eabi-gcc\4.8.3-2014q1\arm-none-eabi\include;C:\Users\Zog\AppData\Local\arduino15\packages\arduino\tools\arm-none-eabi-gcc\4.8.3-2014q1\arm-none-eabi\include\sys;C:\Users\Zog\AppData\Local\arduino15\packages\adafruit\hardware\samd\1.0.11\system;C:\Users\Zog\AppData\Local\arduino15\packages\adafruit\hardware\samd/avr;C:\Users\Zog\AppData\Local\arduino15\packages\adafruit\hardware\samd/usb;C:\Users\Zog\AppData\Local\arduino15\packages\arduino\tools\arm-none-eabi-gcc\4.8.3-2014q1\lib\gcc\arm-none-eabi\4.8.3\include;C:\Users\Zog\AppData\Local\arduino15\packages\arduino\tools\CMSIS\4.0.0-atmel;C:\Users\Zog\AppData\Local\arduino15\packages\arduino\tools\CMSIS\4.0.0-atmel\Device\ATMEL\samd21\include;C:\Users\Zog\AppData\Local\arduino15\packages\arduino\tools\CMSIS\4.0.0-atmel\CMSIS\include;C:\Users\Zog\AppData\Local\arduino15\packages\arduino\tools\CMSIS\4.0.0-atmel\Device\ATMEL\samd21\include\component;C:\Users\Zog\AppData\Local\arduino15\packages\arduino\tools\CMSIS\4.0.0-atmel\Device\ATMEL\samd21\include\instance;C:\Users\Zog\AppData\Local\arduino15\packages\arduino\tools\CMSIS\4.0.0-atmel\Device\ATMEL\samd21\include\pio;C:\Users\Zog\AppData\Local\arduino15\packages\arduino\tools\CMSIS\4.0.0-atmel\Device\ATMEL\samd21\include\component;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>C:\Users\Zog\Dropbox\AA Arduino Sketchbook\SdFatMPU6050_DMP_LowLatencyDatalogger\__vm\.SdFatMPU6050_DMP_LowLatencyDatalogger.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <PreprocessorDefinitions>F_CPU=48000000L;ARDUINO=10609;ARDUINO_SAMD_FEATHER_M0;ARDUINO_ARCH_SAMD;ARDUINO_SAMD_ZERO;__SAMD21G18A__;USB_VID=0x239A;USB_PID=0x800B;USBCON;__cplusplus=201103L;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="VisualMicro" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="SdFatMPU6050_DMP_LowLatencyDatalogger.ino">
+      <FileType>CppCode</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="UserDataType.h">
+      <FileType>CppCode</FileType>
+    </ClInclude>
+    <ClInclude Include="__vm\.SdFatMPU6050_DMP_LowLatencyDatalogger.vsarduino.h" />
+  </ItemGroup>
+  <PropertyGroup>
+    <DebuggerFlavor>VisualMicroDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
