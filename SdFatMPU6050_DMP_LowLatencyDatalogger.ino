@@ -122,15 +122,22 @@ void acquireData(data_t* data) {
 	data->aaWorldz = aaWorldz;
 	
 	data->measuredvbat = measuredvbat;
+	
 	data->year = year;
 	data->month = month;
 	data->day = day;
 	data->hour = hour;
 	data->min = min;
 	data->sec = sec;
+
+	data->mx = mx;
+	data->my = my;
+	data->mz = mz;
+
 	data->temperature = temperature;
 	data->altitude = altitude;
 	data->humidity = humidity;
+	
 	data->logFifo = logFifo;
 }
 
