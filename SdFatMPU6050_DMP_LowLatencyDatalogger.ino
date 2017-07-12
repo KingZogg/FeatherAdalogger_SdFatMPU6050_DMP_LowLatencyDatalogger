@@ -13,7 +13,6 @@
 *
 * Data is written to the file using a SD multiple block write command.
 */
-
 #include <SPI.h>
 #include <SdFat.h>
 #include <SdFatUtil.h>
