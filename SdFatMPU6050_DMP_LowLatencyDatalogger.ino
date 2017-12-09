@@ -37,7 +37,7 @@ float EMA_a = 0.6;      //initialization of EMA alpha
 #define LED_PIN 13 // (Arduino is 13, Teensy is 11, Teensy++ is 6, feather is 13 too)
 #define OUTPUT_READABLE_WORLDACCEL
 
-// MPU control/status vars
+						// MPU control/status vars
 boolean dmpReady = false;  // set true if DMP init was successful
 uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
 uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
@@ -45,7 +45,7 @@ uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[128]; // FIFO storage buffer
 
-						// orientation/motion vars
+						 // orientation/motion vars
 Quaternion q;           // [w, x, y, z]         quaternion container
 VectorInt16 aa;         // [x, y, z]            accel sensor measurements
 VectorInt16 aaReal;     // [x, y, z]            gravity-free accel sensor measurements
@@ -84,7 +84,7 @@ unsigned long ms;        //time from millis()
 unsigned long msLast;    //last time the LED changed state
 boolean ledState;        //current LED state
 
-// RTC setup
+						 // RTC setup
 int16_t year;
 uint8_t month;
 uint8_t day;
@@ -106,22 +106,22 @@ RTC_DS3231 rtc; //Real time clock
 BME280 mySensor; //pressure/temp/humidity
 
 
-//========================================================================================================================
-//                                               Acquire a data record.
-//========================================================================================================================
+				 //========================================================================================================================
+				 //                                               Acquire a data record.
+				 //========================================================================================================================
 void acquireData(data_t* data) {
 	data->time = micros();
 
 	//mpu.getMotion6(&data->ax, &data->ay, &data->az, &data->gx, &data->gy, &data->gz);
 
 	//mag.getHeading(&data->mx, &data->my, &data->mz);
-	
+
 	data->aaWorldx = aaWorldx;
 	data->aaWorldy = aaWorldy;
 	data->aaWorldz = aaWorldz;
-	
+
 	data->measuredvbat = measuredvbat;
-	
+
 	data->year = year;
 	data->month = month;
 	data->day = day;
@@ -136,7 +136,7 @@ void acquireData(data_t* data) {
 	data->temperature = temperature;
 	data->altitude = altitude;
 	data->humidity = humidity;
-	
+
 	data->logFifo = logFifo;
 }
 
@@ -180,29 +180,29 @@ const uint32_t FILE_BLOCK_COUNT = 16384000; //16GB
 
 											// log file base name.  Must be six characters or less.
 #define FILE_BASE_NAME "data"
-										   //------------------------------------------------------------------------------
-										   // Buffer definitions.
-										   //
-										   // The logger will use SdFat's buffer plus BUFFER_BLOCK_COUNT additional
-										   // buffers.
-										   //
+											//------------------------------------------------------------------------------
+											// Buffer definitions.
+											//
+											// The logger will use SdFat's buffer plus BUFFER_BLOCK_COUNT additional
+											// buffers.
+											//
 #ifndef RAMEND
-										   // Assume ARM. Use total of nine 512 byte buffers.
+											// Assume ARM. Use total of nine 512 byte buffers.
 const uint8_t BUFFER_BLOCK_COUNT = 8;
 //
 #elif RAMEND < 0X8FF
 #error Too little SRAM
-										   //
+											//
 #elif RAMEND < 0X10FF
-										   // Use total of two 512 byte buffers.
+											// Use total of two 512 byte buffers.
 const uint8_t BUFFER_BLOCK_COUNT = 1;
 //
 #elif RAMEND < 0X20FF
-										   // Use total of five 512 byte buffers.
+											// Use total of five 512 byte buffers.
 const uint8_t BUFFER_BLOCK_COUNT = 4;
 //
 #else  // RAMEND
-										   // Use total of 13 512 byte buffers.
+											// Use total of 13 512 byte buffers.
 const uint8_t BUFFER_BLOCK_COUNT = 12;
 #endif  // RAMEND
 //==============================================================================
@@ -303,7 +303,7 @@ void logData() {
 			error("Can't remove tmp file");
 		}
 	}
-			
+
 	// Create new file.
 	Serial.println(F("Creating new file"));
 	binFile.close();
@@ -312,7 +312,7 @@ void logData() {
 		TMP_FILE_NAME, 512 * FILE_BLOCK_COUNT)) {
 		error("createContiguous failed");
 	}
-	
+
 
 	// get the date and time.
 	DateTime now = rtc.now();
@@ -322,7 +322,7 @@ void logData() {
 	hour = now.hour();
 	min = now.minute();
 	sec = now.second();
-	
+
 	// Timestamp the file on the SD.
 	if (!binFile.timestamp(T_CREATE, year, month, day, hour, min, sec)) {
 		error("timestamp failed");
@@ -394,10 +394,10 @@ void logData() {
 	//========================================                  Main Logging Loop                 =================================================
 	//=============================================================================================================================================
 	while (1) {
-		
+
 		// if programming failed, don't try to do anything
 		if (!dmpReady) return;
-		
+
 		// wait for MPU interrupt or extra packet(s) available
 		while (!mpuInterrupt && fifoCount < packetSize) {
 		}
@@ -408,17 +408,18 @@ void logData() {
 			// reset so we can continue cleanly
 			mpu.resetFIFO();
 			//Serial.println(F("FIFO overflow!"));
-			
+
 			// otherwise, check for DMP data ready interrupt (this should happen frequently)
-		}else if (mpuIntStatus & 0x02) {
+		}
+		else if (mpuIntStatus & 0x02) {
 			// wait for correct available data length, should be a VERY short wait
 			while (fifoCount < packetSize) fifoCount = mpu.getFIFOCount();
 
 			// read a packet from FIFO
 			mpu.getFIFOBytes(fifoBuffer, packetSize);
 			mpu.resetFIFO();             //http://arduino.stackexchange.com/questions/10308/how-to-clear-fifo-buffer-on-mpu6050
-			// track FIFO count here in case there is > 1 packet available
-			// (this lets us immediately read more without waiting for an interrupt)
+										 // track FIFO count here in case there is > 1 packet available
+										 // (this lets us immediately read more without waiting for an interrupt)
 			fifoCount -= packetSize;
 
 #ifdef OUTPUT_READABLE_WORLDACCEL
@@ -436,23 +437,23 @@ void logData() {
 			aaWorldx = aaWorld.x;
 			aaWorldy = aaWorld.y;
 			aaWorldz = aaWorld.z;
-			
+
 			temperature = mySensor.readTempC(), 2;
 			altitude = mySensor.readFloatAltitudeMeters(), 2;
 			humidity = mySensor.readFloatHumidity(), 2;
-						
+
 			logFifo = fifoCount;
-/*
+			/*
 			Serial.print(mySensor.readTempC(), 2);
 			Serial.print("\t");
-						
+
 			Serial.print(mySensor.readFloatAltitudeMeters(), 2);
 			Serial.print("\t");
-				
+
 			Serial.print(mySensor.readFloatHumidity(), 2);
 			Serial.print("\t");
-			
-			
+
+
 			Serial.print("aworld\t");
 			Serial.print(aaWorld.x);
 			Serial.print("\t");
@@ -465,12 +466,12 @@ void logData() {
 			Serial.print(my);
 			Serial.print("\t");
 			Serial.println(mz);
-*/
-	
+			*/
+
 #endif
-			
+
 		}
-		
+
 		// get the date and time.
 		DateTime now = rtc.now();
 		year = now.year();
@@ -479,26 +480,26 @@ void logData() {
 		hour = now.hour();
 		min = now.minute();
 		sec = now.second();
-		
+
 		// measure the battery voltage.
 		measuredvbat = analogRead(VBATPIN);
 		measuredvbat *= 2;    // we divided by 2, so multiply back
 		measuredvbat *= 3.3;  // Multiply by 3.3V, our reference voltage
 		measuredvbat /= 1024; // convert to voltage
-		
-		//Apply the EMA to the reading
+
+							  //Apply the EMA to the reading
 		measuredvbat = (EMA_a*measuredvbat) + ((1 - EMA_a)*measuredvbat);
-		
+
 
 		//Serial.println(measuredvbat);
-		
-		  //While logging, blink the LED.
-			ms = millis();
 
-			if (ms - msLast > (ledState ? LED_ON_LOGGING : LED_OFF_LOGGING)) {
-				digitalWrite(LED_PIN, ledState = !ledState);
-				msLast = ms;
-			}
+		//While logging, blink the LED.
+		ms = millis();
+
+		if (ms - msLast > (ledState ? LED_ON_LOGGING : LED_OFF_LOGGING)) {
+			digitalWrite(LED_PIN, ledState = !ledState);
+			msLast = ms;
+		}
 
 		// Time for next data record.
 		logTime += LOG_INTERVAL_USEC;
@@ -589,7 +590,7 @@ void logData() {
 	// Truncate file if recording stopped early.
 	if (bn != FILE_BLOCK_COUNT) {
 		Serial.println(F("Truncating file"));
-			if (!binFile.truncate(512L * bn)) {
+		if (!binFile.truncate(512L * bn)) {
 			error("Can't truncate file");
 		}
 	}
@@ -611,13 +612,13 @@ void logData() {
 	Serial.println(F("Done"));
 
 	for (int i = 0; i < 20; i++)
-		{
-			digitalWrite(LED_PIN, LOW);
-			delay(500);
-			digitalWrite(LED_PIN, HIGH);
-			delay(50);
-		}
-	
+	{
+		digitalWrite(LED_PIN, LOW);
+		delay(500);
+		digitalWrite(LED_PIN, HIGH);
+		delay(50);
+	}
+
 
 
 }
@@ -633,8 +634,8 @@ void setup(void) {
 	mySensor.settings.tempOverSample = 2;
 	mySensor.settings.pressOverSample = 5;
 	mySensor.settings.humidOverSample = 1;
-	
-		
+
+
 	// Setup the button with an internal pull-up :
 	pinMode(BUTTON_PIN, INPUT_PULLUP);
 
@@ -677,7 +678,7 @@ void setup(void) {
 	Serial.println(F("Testing device connections..."));
 	Serial.println(mpu.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
 	Serial.println(mag.testConnection() ? F("HMC5883L connection successful") : F("HMC5883L connection failed"));
-	
+
 	// Startup Real time clock.
 	if (!rtc.begin()) {
 		Serial.println("Couldn't find RTC");
@@ -739,51 +740,51 @@ void setup(void) {
 
 void loop(void) {
 
-/*
+	/*
 	// Counts number of button presses
 	// output count to serial
 	// blink a led according to count
 
 	byte switchPin = 2;                    // switch is connected to pin 2
 	byte ledPin = 13;                      // led on pin 13
-	byte buttonPresses = 0;                // how many times the button has been pressed 
+	byte buttonPresses = 0;                // how many times the button has been pressed
 	byte lastPressCount = 0;               // to keep track of last press count
 
 	void setup() {
-		pinMode(switchPin, INPUT);          // Set the switch pin as input
-		digitalWrite(switchPin, HIGH);      // set pullup resistor
-		Serial.begin(9600);                 // Set up serial communication at 9600bps
+	pinMode(switchPin, INPUT);          // Set the switch pin as input
+	digitalWrite(switchPin, HIGH);      // set pullup resistor
+	Serial.begin(9600);                 // Set up serial communication at 9600bps
 	}
 
 	void loop() {
-		if (digitalRead(switchPin) == LOW)  // check if button was pressed
-		{
-			buttonPresses++;                  // increment buttonPresses count
-			delay(250);                       // debounce switch
-		}
-		if (buttonPresses == 4) buttonPresses = 0;         // rollover every fourth press
-		if (lastPressCount != buttonPresses)              // only do output if the count has changed
-		{
-			Serial.print("Button press count = ");          // out to serial
-			Serial.println(buttonPresses, DEC);
-			for (byte n = 0; n <= 5 * buttonPresses; n++)    // lets blink
-			{
-				digitalWrite(ledPin, HIGH);      // turn on led
-				delay(500);                      // wait half a second
-				digitalWrite(ledPin, LOW);       // turn off led
-				delay(500);                      // wait again
-			}
-			lastPressCount = buttonPresses;    // track last press count
-		}
+	if (digitalRead(switchPin) == LOW)  // check if button was pressed
+	{
+	buttonPresses++;                  // increment buttonPresses count
+	delay(250);                       // debounce switch
+	}
+	if (buttonPresses == 4) buttonPresses = 0;         // rollover every fourth press
+	if (lastPressCount != buttonPresses)              // only do output if the count has changed
+	{
+	Serial.print("Button press count = ");          // out to serial
+	Serial.println(buttonPresses, DEC);
+	for (byte n = 0; n <= 5 * buttonPresses; n++)    // lets blink
+	{
+	digitalWrite(ledPin, HIGH);      // turn on led
+	delay(500);                      // wait half a second
+	digitalWrite(ledPin, LOW);       // turn off led
+	delay(500);                      // wait again
+	}
+	lastPressCount = buttonPresses;    // track last press count
+	}
 	}
 
 
 	while ((digitalRead(BUTTON_PIN) == LOW)) {
-		binaryToCsv();
+	binaryToCsv();
 	}
-*/
-	
-/* read raw heading measurements from device
+	*/
+
+	/* read raw heading measurements from device
 	mag.getHeading(&mx, &my, &mz);
 
 	// display tab-separated gyro x/y/z values
@@ -795,13 +796,13 @@ void loop(void) {
 	// To calculate heading in degrees. 0 degree indicates North
 	float heading = atan2(my, mx);
 	if (heading < 0)
-		heading += 2 * M_PI;
+	heading += 2 * M_PI;
 	Serial.print("heading:\t");
 	Serial.println(heading * 180 / M_PI);
-	
-*/	
-	
-	
+
+	*/
+
+
 
 
 	if (digitalRead(BUTTON_PIN) == LOW) {
