@@ -24,5 +24,8 @@
     <ClInclude Include="UserDataType.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="__vm\.FeatherAdalogger_SdFatMPU6050_DMP_LowLatencyDatalogger.vsarduino.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
