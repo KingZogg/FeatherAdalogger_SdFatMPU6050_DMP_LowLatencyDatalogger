@@ -78,7 +78,7 @@ float measuredvbat;
 
 // used for flashing the led.
 #define LED_ON_LOGGING 1       //milliseconds
-#define LED_OFF_LOGGING 20000
+#define LED_OFF_LOGGING 10000
 #define LED_ON_TRUNCATE_FILE 1000       //milliseconds
 #define LED_OFF_TRUNCATE_FILE 1000
 
@@ -108,7 +108,7 @@ int16_t logFifo;
 MPU6050 mpu(0x69); // <-- use for AD0 high
 HMC5883L mag; // Magnetometer
 RTC_DS3231 rtc; //Real time clock
-BME280 mySensor; //pressure/temp/humidity
+BME280 BME280_PressTempHumid; //pressure/temp/humidity
 
 
 				 //========================================================================================================================
@@ -356,9 +356,9 @@ void binaryToCsv() {
 
 	char MyBinName[] = "data00.bin";
 	binFile.open(MyBinName, O_READ);
+	
 	Serial.println(MyBinName);
-
-
+	
 	if (!binFile.isOpen()) {
 		Serial.println();
 		Serial.println(F("On Convert - No current binary file"));
@@ -372,6 +372,21 @@ void binaryToCsv() {
 	if (!csvFile.open(csvName, O_WRITE | O_CREAT | O_TRUNC)) {
 		error("open csvFile failed");
 	}
+
+	// get the date and time.
+	DateTime now = rtc.now();
+	year = now.year();
+	month = now.month();
+	day = now.day();
+	hour = now.hour();
+	min = now.minute();
+	sec = now.second();
+
+	// Timestamp the file on the SD.
+	csvFile.timestamp(T_CREATE, year, month, day, hour, min, sec);
+
+
+
 	Serial.println();
 	Serial.print(F("Writing: "));
 	Serial.print(csvName);
@@ -533,14 +548,9 @@ void logData() {
 	sec = now.second();
 
 	// Timestamp the file on the SD.
-	if (!binFile.timestamp(T_CREATE, year, month, day, hour, min, sec)) {
-		error("timestamp failed");
-	}
+	binFile.timestamp(T_CREATE, year, month, day, hour, min, sec);
 
-	// Timestamp the file on the SD.
-	if (!binFile.timestamp(T_WRITE, year, month, day, hour, min, sec)) {
-		error("timestamp failed");
-	}
+
 
 	// Get the address of the file on the SD.
 	if (!binFile.contiguousRange(&bgnBlock, &endBlock)) {
@@ -647,19 +657,19 @@ void logData() {
 			aaWorldy = aaWorld.y;
 			aaWorldz = aaWorld.z;
 
-			temperature = mySensor.readTempC(), 2;
-			altitude = mySensor.readFloatAltitudeMeters(), 2;
-			humidity = mySensor.readFloatHumidity(), 2;
+			temperature = BME280_PressTempHumid.readTempC(), 2;
+			altitude = BME280_PressTempHumid.readFloatAltitudeMeters(), 2;
+			humidity = BME280_PressTempHumid.readFloatHumidity(), 2;
 
 			logFifo = fifoCount;
-			/*
-			Serial.print(mySensor.readTempC(), 2);
+		
+			Serial.print(BME280_PressTempHumid.readTempC(), 2);
 			Serial.print("\t");
 
-			Serial.print(mySensor.readFloatAltitudeMeters(), 2);
+			Serial.print(BME280_PressTempHumid.readFloatAltitudeMeters(), 2);
 			Serial.print("\t");
 
-			Serial.print(mySensor.readFloatHumidity(), 2);
+			Serial.print(BME280_PressTempHumid.readFloatHumidity(), 2);
 			Serial.print("\t");
 
 
@@ -675,7 +685,7 @@ void logData() {
 			Serial.print(my);
 			Serial.print("\t");
 			Serial.println(mz);
-			*/
+			
 
 #endif
 
@@ -819,13 +829,14 @@ void logData() {
 	Serial.print(F("Overruns: "));
 	Serial.println(overrunTotal);
 	
+	//Convert files to CSV
 	binaryToCsv();
 	checkOverrun();
 
 
 	Serial.println(F("Done"));
 
-	for (int i = 0; i < 20; i++)
+	for (int i = 0; i < 5; i++)
 	{
 		digitalWrite(LED_PIN, LOW);
 		delay(500);
@@ -840,14 +851,14 @@ void logData() {
 void setup(void) {
 
 	//Setup BME280 bosh pressure/temp/humidity sensor
-	mySensor.settings.commInterface = I2C_MODE;
-	mySensor.settings.I2CAddress = 0x77;
-	mySensor.settings.runMode = 3; //Normal mode
-	mySensor.settings.tStandby = 0;
-	mySensor.settings.filter = 4;
-	mySensor.settings.tempOverSample = 2;
-	mySensor.settings.pressOverSample = 5;
-	mySensor.settings.humidOverSample = 1;
+	BME280_PressTempHumid.settings.commInterface = I2C_MODE;
+	BME280_PressTempHumid.settings.I2CAddress = 0x77;
+	BME280_PressTempHumid.settings.runMode = 3; //Normal mode
+	BME280_PressTempHumid.settings.tStandby = 0;
+	BME280_PressTempHumid.settings.filter = 4;
+	BME280_PressTempHumid.settings.tempOverSample = 2;
+	BME280_PressTempHumid.settings.pressOverSample = 5;
+	BME280_PressTempHumid.settings.humidOverSample = 1;
 
 
 	// Setup the button with an internal pull-up :
@@ -883,7 +894,7 @@ void setup(void) {
 
 	//	Serial.println(F("Initializing I2C devices..."));
 	delay(10);  //Make sure sensor had enough time to turn on. BME280 requires 2ms to start up.
-	mySensor.begin();
+	BME280_PressTempHumid.begin();
 	mpu.initialize();
 	mag.initialize();
 	pinMode(INTERRUPT_PIN, INPUT);
@@ -892,6 +903,7 @@ void setup(void) {
 	Serial.println(F("Testing device connections..."));
 	Serial.println(mpu.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
 	Serial.println(mag.testConnection() ? F("HMC5883L connection successful") : F("HMC5883L connection failed"));
+	//Serial.println(BME280_PressTempHumid.testConnection() ? F("BME280 connection successful") : F("BME280 connection failed"));
 
 	// Startup Real time clock.
 	if (!rtc.begin()) {
