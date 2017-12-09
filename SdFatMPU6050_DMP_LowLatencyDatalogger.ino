@@ -30,8 +30,6 @@
 
 float EMA_a = 0.6;      //initialization of EMA alpha
 
-
-
 #define BUTTON_PIN 6
 #define INTERRUPT_PIN 5  // MPU6050 interrupt pin is using pin 5 on my adafruit datalogger feather.
 #define LED_PIN 13 // (Arduino is 13, Teensy is 11, Teensy++ is 6, feather is 13 too)
@@ -44,6 +42,9 @@ uint8_t devStatus;      // return status after each device operation (0 = succes
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[128]; // FIFO storage buffer
+
+int ButtonPresses = 0;
+
 
 						 // orientation/motion vars
 Quaternion q;           // [w, x, y, z]         quaternion container
@@ -80,6 +81,10 @@ float measuredvbat;
 #define LED_OFF_LOGGING 20000
 #define LED_ON_TRUNCATE_FILE 1000       //milliseconds
 #define LED_OFF_TRUNCATE_FILE 1000
+
+#define LED_ON_CONVERT_FILE 1       //milliseconds
+#define LED_OFF_CONVERT_FILE 500
+
 unsigned long ms;        //time from millis()
 unsigned long msLast;    //last time the LED changed state
 boolean ledState;        //current LED state
@@ -112,9 +117,9 @@ BME280 mySensor; //pressure/temp/humidity
 void acquireData(data_t* data) {
 	data->time = micros();
 
-	//mpu.getMotion6(&data->ax, &data->ay, &data->az, &data->gx, &data->gy, &data->gz);
+	mpu.getMotion6(&data->ax, &data->ay, &data->az, &data->gx, &data->gy, &data->gz);
 
-	//mag.getHeading(&data->mx, &data->my, &data->mz);
+	mag.getHeading(&data->mx, &data->my, &data->mz);
 
 	data->aaWorldx = aaWorldx;
 	data->aaWorldy = aaWorldy;
@@ -150,6 +155,7 @@ void setupData() {
 	Serial.println(F("Using Fastwire"));
 #endif  
 }
+
 
 
 //==============================================================================
@@ -268,6 +274,208 @@ void fatalBlink() {
 	}
 }
 
+//========================================================================================================================
+//                                               Print a data record.
+//========================================================================================================================
+// only used for convert .bin to .csv and the dumpdata routines.
+void printData(Print* pr, data_t* data) {
+
+	pr->print(data->year);
+	pr->write('/');
+	pr->print(data->month);
+	pr->write('/');
+	pr->print(data->day);
+	pr->write(' ');
+	pr->print(data->hour);
+	pr->write(':');
+	pr->print(data->min);
+	pr->write(':');
+	pr->print(data->sec);
+	pr->write('\t');
+
+
+	pr->print(data->time);
+	pr->write('\t');
+	pr->print(data->measuredvbat);
+	pr->write('\t');
+
+	pr->print(data->aaWorldx);
+	pr->write('\t');
+	pr->print(data->aaWorldy);
+	pr->write('\t');
+	pr->print(data->aaWorldz);
+	pr->write('\t');
+
+	
+	pr->print(data->mx);
+	pr->write('\t');
+	pr->print(data->my);
+	pr->write('\t');
+	pr->print(data->mz);
+	pr->write('\t');
+
+	pr->print(data->ax);
+	pr->write('\t');
+	pr->print(data->ay);
+	pr->write('\t');
+	pr->print(data->az);
+	pr->write('\t');
+	pr->print(data->gx);
+	pr->write('\t');
+	pr->print(data->gy);
+	pr->write('\t');
+	pr->print(data->gz);
+	pr->write('\t');
+	
+
+	pr->print(data->temperature);
+	pr->write('\t');
+	pr->print(data->altitude);
+	pr->write('\t');
+	pr->print(data->humidity);
+	pr->write('\t');
+	pr->println(data->logFifo);
+
+
+}
+
+// Print data header.
+void printHeader(Print* pr) {
+	pr->println(F("#Date	MicroSeconds	Batt	worldx	worldy	worldz	mx	my	mz	ax	ay	az	gx	gy	gz	Temp	Altitude	Humidity	Fifo"));
+}
+
+//==============================================================================
+// Convert binary file to csv file.
+void binaryToCsv() {
+	uint8_t lastPct = 0;
+	block_t block;
+	uint32_t t0 = millis();
+	uint32_t syncCluster = 0;
+	SdFile csvFile;
+	char csvName[13];
+
+	char MyBinName[] = "data00.bin";
+	binFile.open(MyBinName, O_READ);
+	Serial.println(MyBinName);
+
+
+	if (!binFile.isOpen()) {
+		Serial.println();
+		Serial.println(F("On Convert - No current binary file"));
+		return;
+	}
+	binFile.rewind();
+	// Create a new csvFile.
+	strcpy(csvName, MyBinName);
+	strcpy(&csvName[BASE_NAME_SIZE + 3], "csv");
+
+	if (!csvFile.open(csvName, O_WRITE | O_CREAT | O_TRUNC)) {
+		error("open csvFile failed");
+	}
+	Serial.println();
+	Serial.print(F("Writing: "));
+	Serial.print(csvName);
+	printHeader(&csvFile);
+	uint32_t tPct = millis();
+	while (!Serial.available() && binFile.read(&block, 512) == 512) {
+
+
+
+		uint16_t i;
+		if (block.count == 0) {
+			Serial.println(F("hit break"));
+			break;
+		}
+		if (block.overrun) {
+			csvFile.print(F("OVERRUN,"));
+			csvFile.println(block.overrun);
+		}
+		for (i = 0; i < block.count; i++) {
+			printData(&csvFile, &block.data[i]);
+		}
+
+		// blink the LED.
+		ms = millis();
+
+		if (ms - msLast >(ledState ? LED_ON_CONVERT_FILE : LED_OFF_CONVERT_FILE)) {
+			digitalWrite(LED_PIN, ledState = !ledState);
+			msLast = ms;
+		}
+
+		if (csvFile.curCluster() != syncCluster) {
+			csvFile.sync();
+			syncCluster = csvFile.curCluster();
+		}
+		if ((millis() - tPct) > 1000) {
+			uint8_t pct = binFile.curPosition() / (binFile.fileSize() / 100);
+			if (pct != lastPct) {
+				tPct = millis();
+				lastPct = pct;
+				Serial.print(pct, DEC);
+				Serial.println('%');
+			}
+		}
+		if (Serial.available()) {
+			break;
+		}
+	}
+	csvFile.close();
+	Serial.print(F("Done: "));
+	Serial.print(0.001*(millis() - t0));
+	Serial.println(F(" Seconds"));
+	
+	
+}
+//------------------------------------------------------------------------------
+//Dump data file and check for overruns
+void checkOverrun() {
+	boolean headerPrinted = false;
+	block_t block;
+	uint32_t bgnBlock, endBlock;
+	uint32_t bn = 0;
+
+	if (!binFile.isOpen()) {
+		Serial.println();
+		Serial.println(F("On CheckOverrun - No current binary file"));
+		return;
+	}
+	if (!binFile.contiguousRange(&bgnBlock, &endBlock)) {
+		error("contiguousRange failed");
+	}
+	binFile.rewind();
+	Serial.println();
+	Serial.println(F("Checking overrun errors"));
+	while (binFile.read(&block, 512) == 512) {
+		if (block.count == 0) {
+			break;
+		}
+		if (block.overrun) {
+			if (!headerPrinted) {
+				Serial.println();
+				Serial.println(F("Overruns:"));
+				Serial.println(F("fileBlockNumber,sdBlockNumber,overrunCount"));
+				headerPrinted = true;
+			}
+			Serial.print(bn);
+			Serial.print(',');
+			Serial.print(bgnBlock + bn);
+			Serial.print(',');
+			Serial.println(block.overrun);
+		}
+		bn++;
+	}
+	if (!headerPrinted) {
+		Serial.println(F("No errors found"));
+	}
+	else {
+		Serial.println(F("Done"));
+	}
+}
+
+
+
+
+
 //------------------------------------------------------------------------------
 // log data
 // max number of blocks to erase per erase call
@@ -305,6 +513,7 @@ void logData() {
 	}
 
 	// Create new file.
+	digitalWrite(LED_PIN, LOW);
 	Serial.println(F("Creating new file"));
 	binFile.close();
 
@@ -609,6 +818,11 @@ void logData() {
 	Serial.println((1000.0)*count / (t1 - t0));
 	Serial.print(F("Overruns: "));
 	Serial.println(overrunTotal);
+	
+	binaryToCsv();
+	checkOverrun();
+
+
 	Serial.println(F("Done"));
 
 	for (int i = 0; i < 20; i++)
@@ -740,74 +954,46 @@ void setup(void) {
 
 void loop(void) {
 
-	/*
-	// Counts number of button presses
-	// output count to serial
-	// blink a led according to count
-
-	byte switchPin = 2;                    // switch is connected to pin 2
-	byte ledPin = 13;                      // led on pin 13
-	byte buttonPresses = 0;                // how many times the button has been pressed
-	byte lastPressCount = 0;               // to keep track of last press count
-
-	void setup() {
-	pinMode(switchPin, INPUT);          // Set the switch pin as input
-	digitalWrite(switchPin, HIGH);      // set pullup resistor
-	Serial.begin(9600);                 // Set up serial communication at 9600bps
-	}
-
-	void loop() {
-	if (digitalRead(switchPin) == LOW)  // check if button was pressed
-	{
-	buttonPresses++;                  // increment buttonPresses count
-	delay(250);                       // debounce switch
-	}
-	if (buttonPresses == 4) buttonPresses = 0;         // rollover every fourth press
-	if (lastPressCount != buttonPresses)              // only do output if the count has changed
-	{
-	Serial.print("Button press count = ");          // out to serial
-	Serial.println(buttonPresses, DEC);
-	for (byte n = 0; n <= 5 * buttonPresses; n++)    // lets blink
-	{
-	digitalWrite(ledPin, HIGH);      // turn on led
-	delay(500);                      // wait half a second
-	digitalWrite(ledPin, LOW);       // turn off led
-	delay(500);                      // wait again
-	}
-	lastPressCount = buttonPresses;    // track last press count
-	}
-	}
-
-
-	while ((digitalRead(BUTTON_PIN) == LOW)) {
-	binaryToCsv();
-	}
-	*/
-
-	/* read raw heading measurements from device
-	mag.getHeading(&mx, &my, &mz);
-
-	// display tab-separated gyro x/y/z values
-	Serial.print("mag:\t");
-	Serial.print(mx); Serial.print("\t");
-	Serial.print(my); Serial.print("\t");
-	Serial.print(mz); Serial.print("\t");
-
-	// To calculate heading in degrees. 0 degree indicates North
-	float heading = atan2(my, mx);
-	if (heading < 0)
-	heading += 2 * M_PI;
-	Serial.print("heading:\t");
-	Serial.println(heading * 180 / M_PI);
-
-	*/
-
-
-
 
 	if (digitalRead(BUTTON_PIN) == LOW) {
+		ButtonPresses++;
+		Serial.println(F("Start Button Pressed"));
+
 		delay(1000);
+
 		logData();
+
+
+
 	}
 
+
+	if ((ButtonPresses) >= 2) {
+		
+		Serial.println(F("Stop Button Pressed"));
+
+		binaryToCsv();
+		checkOverrun();
+
+	};
+
 };
+
+
+/* read raw heading measurements from device
+mag.getHeading(&mx, &my, &mz);
+
+// display tab-separated gyro x/y/z values
+Serial.print("mag:\t");
+Serial.print(mx); Serial.print("\t");
+Serial.print(my); Serial.print("\t");
+Serial.print(mz); Serial.print("\t");
+
+// To calculate heading in degrees. 0 degree indicates North
+float heading = atan2(my, mx);
+if (heading < 0)
+heading += 2 * M_PI;
+Serial.print("heading:\t");
+Serial.println(heading * 180 / M_PI);
+
+*/
