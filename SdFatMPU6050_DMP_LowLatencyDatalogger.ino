@@ -353,6 +353,7 @@ void binaryToCsv() {
 	uint32_t syncCluster = 0;
 	SdFile csvFile;
 	char csvName[13];
+	
 
 	char MyBinName[] = "data00.bin";
 	binFile.open(MyBinName, O_READ);
@@ -373,6 +374,7 @@ void binaryToCsv() {
 		error("open csvFile failed");
 	}
 
+
 	// get the date and time.
 	DateTime now = rtc.now();
 	year = now.year();
@@ -382,8 +384,15 @@ void binaryToCsv() {
 	min = now.minute();
 	sec = now.second();
 
-	// Timestamp the file on the SD.
-	csvFile.timestamp(T_CREATE, year, month, day, hour, min, sec);
+	// Create the Timestamp for the file on the SD.
+	if (!csvFile.timestamp(T_CREATE, year, month, day, hour, min, sec)) {
+		error("create .CSV timestamp failed");
+	}
+
+	// Write the Timestamp to the file on the SD.
+	if (!csvFile.timestamp(T_WRITE, year, month, day, hour, min, sec)) {
+		error("write .CSV timestamp failed");
+	}
 
 
 
@@ -547,8 +556,15 @@ void logData() {
 	min = now.minute();
 	sec = now.second();
 
-	// Timestamp the file on the SD.
-	binFile.timestamp(T_CREATE, year, month, day, hour, min, sec);
+	// Create the Timestamp for the file on the SD.
+	if (!binFile.timestamp(T_CREATE, year, month, day, hour, min, sec)) {
+		error("Create .BIN timestamp failed");
+	}
+
+	// Write the Timestamp to the file on the SD.
+	if (!binFile.timestamp(T_WRITE, year, month, day, hour, min, sec)) {
+		error("Write .BIN timestamp failed");
+	}
 
 
 
@@ -685,7 +701,9 @@ void logData() {
 			Serial.print(my);
 			Serial.print("\t");
 			Serial.println(mz);
-			
+		
+
+
 
 #endif
 
