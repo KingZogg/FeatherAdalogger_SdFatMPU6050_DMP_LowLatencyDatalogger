@@ -81,9 +81,6 @@
     <None Include="SdFatMPU6050_DMP_LowLatencyDatalogger.ino">
       <FileType>CppCode</FileType>
     </None>
-    <None Include="test.ino">
-      <FileType>CppCode</FileType>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="UserDataType.h">

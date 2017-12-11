@@ -16,7 +16,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="SdFatMPU6050_DMP_LowLatencyDatalogger.ino" />
-    <None Include="test.ino" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="__vm\.SdFatMPU6050_DMP_LowLatencyDatalogger.vsarduino.h">

@@ -76,12 +76,15 @@ boolean debug = false; //This MUST be set to false for the button to work in sta
 
 float measuredvbat;
 
-// used for flashing the led.
+// used for flashing the led while logging.
 #define LED_ON_LOGGING 1       //milliseconds
 #define LED_OFF_LOGGING 10000
-#define LED_ON_TRUNCATE_FILE 1000       //milliseconds
-#define LED_OFF_TRUNCATE_FILE 1000
 
+// used for flashing the led while writing the BIN file.
+#define LED_ON_TRUNCATE_FILE 500       //milliseconds
+#define LED_OFF_TRUNCATE_FILE 500
+
+// used for flashing the led while writing the CSV file.
 #define LED_ON_CONVERT_FILE 1       //milliseconds
 #define LED_OFF_CONVERT_FILE 500
 
@@ -89,7 +92,7 @@ unsigned long ms;        //time from millis()
 unsigned long msLast;    //last time the LED changed state
 boolean ledState;        //current LED state
 
-						 // RTC setup
+// RTC setup
 int16_t year;
 uint8_t month;
 uint8_t day;
@@ -111,9 +114,9 @@ RTC_DS3231 rtc; //Real time clock
 BME280 BME280_PressTempHumid; //pressure/temp/humidity
 
 
-				 //========================================================================================================================
-				 //                                               Acquire a data record.
-				 //========================================================================================================================
+//========================================================================================================================
+//                                               Acquire a data record.
+//========================================================================================================================
 void acquireData(data_t* data) {
 	data->time = micros();
 
@@ -165,8 +168,6 @@ void setupData() {
 const uint32_t LOG_INTERVAL_USEC = 40000;
 //------------------------------------------------------------------------------
 // Pin definitions.
-//
-// SD chip select pin.
 const uint8_t SD_CS_PIN = 4;
 //
 // Digital pin to indicate an error, set to -1 if not used.
@@ -180,12 +181,13 @@ const int8_t ERROR_LED_PIN = 13;
 // The program creates a contiguous file with FILE_BLOCK_COUNT 512 byte blocks.
 // This file is flash erased using special SD commands.  The file will be
 // truncated if logging is stopped early.
+
 // must also be one exactly of these depending on how big you want the file size to be.
 // 25600 51200 1024000 20480000 4096000 8192000 16384000 for a 16 gig card ... etc.
 const uint32_t FILE_BLOCK_COUNT = 16384000; //16GB
 
-											// log file base name.  Must be six characters or less.
-#define FILE_BASE_NAME "data"
+											
+#define FILE_BASE_NAME "data"				// log file base name.  Must be six characters or less.
 											//------------------------------------------------------------------------------
 											// Buffer definitions.
 											//
@@ -198,7 +200,7 @@ const uint8_t BUFFER_BLOCK_COUNT = 8;
 //
 #elif RAMEND < 0X8FF
 #error Too little SRAM
-											//
+											
 #elif RAMEND < 0X10FF
 											// Use total of two 512 byte buffers.
 const uint8_t BUFFER_BLOCK_COUNT = 1;
@@ -214,6 +216,8 @@ const uint8_t BUFFER_BLOCK_COUNT = 12;
 //==============================================================================
 // End of configuration constants.
 //==============================================================================
+
+
 // Temporary log file.  Will be deleted if a reset or power failure occurs.
 #define TMP_FILE_NAME "tmp_log.bin"
 
@@ -625,6 +629,7 @@ void logData() {
 	uint32_t logTime = micros() / LOG_INTERVAL_USEC + 1;
 	logTime *= LOG_INTERVAL_USEC;
 	boolean closeFile = false;
+	
 	//=============================================================================================================================================
 	//========================================                  Main Logging Loop                 =================================================
 	//=============================================================================================================================================
@@ -723,11 +728,7 @@ void logData() {
 		measuredvbat *= 2;    // we divided by 2, so multiply back
 		measuredvbat *= 3.3;  // Multiply by 3.3V, our reference voltage
 		measuredvbat /= 1024; // convert to voltage
-
-							  //Apply the EMA to the reading
-		measuredvbat = (EMA_a*measuredvbat) + ((1 - EMA_a)*measuredvbat);
-
-
+		measuredvbat = (EMA_a*measuredvbat) + ((1 - EMA_a)*measuredvbat);  //Apply the EMA to the reading, used for smoothing out any glitches
 		//Serial.println(measuredvbat);
 
 		//While logging, blink the LED.
@@ -847,19 +848,20 @@ void logData() {
 	Serial.print(F("Overruns: "));
 	Serial.println(overrunTotal);
 	
-	//Convert files to CSV
+	//Convert files to CSV and check for overruns
 	binaryToCsv();
 	checkOverrun();
 
 
 	Serial.println(F("Done"));
 
-	for (int i = 0; i < 5; i++)
+	//Flash the LED to indicate conversion is complete
+	for (int i = 0; i < 10; i++)
 	{
 		digitalWrite(LED_PIN, LOW);
-		delay(500);
+		delay(250);
 		digitalWrite(LED_PIN, HIGH);
-		delay(50);
+		delay(250);
 	}
 
 
